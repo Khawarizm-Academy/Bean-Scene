@@ -7,3 +7,6 @@ overrides:
 onlyBuiltDependencies:
   - '@tailwindcss/oxide'
   - esbuild
+allowBuilds:
+  '@tailwindcss/oxide': set this to true or false
+  esbuild: set this to true or false
