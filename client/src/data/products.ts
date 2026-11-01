@@ -1,0 +1,70 @@
+export type Product = {
+  id: string;
+  slug: string;
+  name: string;
+  blend: string;
+  description: string;
+  price: number;
+  image: string;
+  desktopImage?: string;
+  featured?: boolean;
+  notes: string[];
+};
+
+export const products: Product[] = [
+  {
+    id: "cappuccino",
+    slug: "cappuccino",
+    name: "Cappuccino",
+    blend: "Coffee 50% | Milk 50%",
+    description:
+      "A softly foamed cappuccino with a balanced roast and a comforting milk finish. It is the cup we reach for when a slow morning needs a warm start.",
+    price: 8.5,
+    image: "/assets/figma/I105-9941;105-8158.webp",
+    desktopImage: "/assets/figma/2-68.webp",
+    featured: true,
+    notes: ["Cocoa", "Velvety milk", "Balanced roast"],
+  },
+  {
+    id: "chai-latte",
+    slug: "chai-latte",
+    name: "Chai Latte",
+    blend: "Coffee 50% | Milk 50%",
+    description:
+      "A creamy chai latte with gentle spice and a soft coffee backbone for a bright, unhurried pause.",
+    price: 8.5,
+    image: "/assets/figma/I105-9952;105-8158.webp",
+    desktopImage: "/assets/figma/2-77.webp",
+    featured: true,
+    notes: ["Cardamom", "Creamy", "Soft spice"],
+  },
+  {
+    id: "macchiato",
+    slug: "macchiato",
+    name: "Macchiato",
+    blend: "Coffee 50% | Milk 50%",
+    description:
+      "A short, expressive macchiato with a little milk and a lot of character; ideal when you want the roast to lead.",
+    price: 8.5,
+    image: "/assets/figma/I105-9963;105-8158.webp",
+    desktopImage: "/assets/figma/2-86.webp",
+    featured: true,
+    notes: ["Roasted almond", "Short cup", "Bold"],
+  },
+  {
+    id: "expresso",
+    slug: "expresso",
+    name: "Expresso",
+    blend: "Coffee 50% | Milk 50%",
+    description:
+      "A bright, concise espresso-style cup with deeply roasted aroma and a dark chocolate finish.",
+    price: 8.5,
+    image: "/assets/figma/I105-9974;105-8158.webp",
+    desktopImage: "/assets/figma/2-95.webp",
+    featured: true,
+    notes: ["Dark chocolate", "Bright finish", "Roasted"],
+  },
+];
+
+export const formatCurrency = (value: number) =>
+  new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(value);
