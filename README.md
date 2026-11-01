@@ -1,47 +1,48 @@
-# Bean Scene
+# Bean Scene ☕
 
-Bean Scene is a responsive coffee-shop storefront built as a polished React + Express portfolio project. Its landing page faithfully adapts the supplied Figma desktop and mobile frames using their local image exports, original copy, `Playfair Display` typography, `Clicker Script` wordmark treatment, roasted-brown palette, coffee flourishes, and gold pill actions.
+A polished, responsive coffee-shop storefront built as a portfolio showcase with **React 19 + TypeScript + Express**. The landing page is a faithful recreation of the supplied Figma frames — their local imagery, original copy, `Playfair Display` / `Clicker Script` typography, roasted-brown palette and gold pill actions are all preserved.
 
-## What is included
+## What's inside
 
-The public storefront has responsive home, shop, product detail, about, contact, cart, demo checkout, and order-confirmation routes. It includes a persisted browser cart, product quantities, removal and totals, mobile navigation, accessible contact/newsletter forms, demo checkout validation, reduced-motion support, real local imagery, crawler documents, meaningful metadata, product structured data, and a small Express API.
+- **Public storefront** — home, shop, product detail, about, contact, cart, demo checkout and order-confirmation pages.
+- **Cart & demo checkout** — a persisted browser cart with quantities, totals and removal; a clearly-labelled, no-payment checkout flow.
+- **Optional Supabase backend** — when server-side credentials exist, Express reads products and records newsletter, contact and demo-order submissions. Without them, everything stays usable in an honestly-labelled demo mode.
+- **SEO & accessibility** — per-route metadata and structured data, real 404s, sitemap/robots support, semantic markup, keyboard-friendly controls and reduced-motion support.
 
-Supabase is optional for the portfolio preview. When its server-only credentials are configured, the Express layer reads products and records newsletter signups, contact messages, and demo orders. When unavailable, every public feature remains useful with clearly labelled local demo behavior. The checkout never collects or processes payment data.
+No real payments, sign-ins or email delivery — every flow says exactly what happened (saved, preview-only, or not configured).
 
-## Quick start
+## Run it
 
 ```bash
 cp .env.example .env
 pnpm dev
 ```
 
-Open the managed Preview after the server reports that it is listening on port `3000`.
+Open the preview once the server reports it is listening on port `3000`.
 
-| Command | Result |
+| Command | What it does |
 | --- | --- |
-| `pnpm dev` | Express server plus Vite development client |
+| `pnpm dev` | Express server + Vite dev client |
 | `pnpm check` | TypeScript type check |
-| `pnpm build` | Production build of the client and Express server |
+| `pnpm test` | Vitest suite |
+| `pnpm build` | Production build (client + server) |
 | `pnpm start` | Run the compiled production server |
 
 ## Documentation
 
-Read [the design-system analysis](./DESIGN_SYSTEM.md) for the Figma token/relationship analysis, [the architecture guide](./ARCHITECTURE.md) for implementation and route structure, [the Supabase guide](./SUPABASE.md) for external database configuration, [the validation record](./VALIDATION.md) for browser/build evidence and retained Figma reference frames, and [the delivery tracker](./TODO.md) for the confirmed project outcomes.
+Everything lives in the [`docs/`](./docs/README.md) folder — start with the [documentation index](./docs/README.md), which explains the suggested reading order:
 
-The portable SQL is at [`supabase/schema.sql`](./supabase/schema.sql). Apply it in a Supabase SQL editor after adding `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` as server-side environment values. Set `VITE_PUBLIC_SITE_URL` to the production domain before publishing to activate canonical and absolute social metadata.
+| Doc | Contents |
+| --- | --- |
+| [Design guide](./docs/02-design-guide.md) | Figma token analysis, colors, type, components, motion rules |
+| [Architecture](./docs/03-architecture.md) | Stack, folder structure, routes, API and data flow |
+| [Database — Supabase](./docs/04-supabase-database.md) | Optional database setup, env variables, schema and fallbacks |
+| [Testing log](./docs/05-testing-log.md) | Visual/interaction review, automated checks and results |
+| [Roadmap](./docs/06-roadmap.md) | Delivered features and pending production configuration |
+| [Original plan](./docs/07-original-plan.md) | The implementation blueprint this project followed |
 
-## SEO and accessibility
+## Quick notes
 
-The website exposes its declared routes in `client/public/manus-routes.json`, emits route-specific HTML, titles, descriptions, structured data and real 404s from Express, and generates `robots.txt` and an absolute `sitemap.xml`. The sitemap and production canonicals become available after `VITE_PUBLIC_SITE_URL` is set to the real HTTPS site origin. The site uses semantic headings/labels/alt text, keyboard-operable menus and cart controls, and honors `prefers-reduced-motion`. Do not replace the local Figma image references with external placeholders: the frame exports are deliberately retained under `client/public/assets/figma/`.
-
-
-## Project plan
-
-The design and implementation blueprint is recorded in [plan.md](./plan.md). The two Figma files are desktop/mobile frames of the same homepage; see the system analysis before extending its styles or adding pages.
-
-
-## Progress and result feedback
-
-Newsletter, contact, cart and checkout actions show accessible progress, success, demo/persistence and retryable error states. Confirmation distinguishes database persistence from email delivery. No email provider is configured, so the app clearly reports that confirmation email is not sent rather than displaying a false “email sent” success.
-
-Configured Supabase write outages and menu-read failures now show retryable feedback rather than demo success; empty catalogues are identified separately from missing credentials. The cart explains when browser storage is unavailable, and the order-confirmation route will not claim an order without a recent successful checkout.
+- The portable SQL schema is at [`supabase/schema.sql`](./supabase/schema.sql) — apply it in a Supabase SQL editor, then set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` as server-only environment values.
+- Set `VITE_PUBLIC_SITE_URL` to the real production domain before publishing; it activates canonical, share-image and absolute-sitemap URLs.
+- Keep the Figma image exports under `client/public/assets/figma/` — they are the brand's local assets, not placeholders.

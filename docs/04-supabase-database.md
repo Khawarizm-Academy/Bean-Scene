@@ -20,7 +20,7 @@ VITE_PUBLIC_SITE_URL=https://your-real-production-domain.example
 
 1. Create/select the Supabase project.
 2. Open **SQL Editor**.
-3. Run [`supabase/schema.sql`](./supabase/schema.sql).
+3. Run [`supabase/schema.sql`](../supabase/schema.sql).
 4. Confirm the four Figma-matched coffee rows exist in `products`.
 5. Set `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` in the server runtime.
 6. Restart the app. `/api/products` reads rows through Express when configured.

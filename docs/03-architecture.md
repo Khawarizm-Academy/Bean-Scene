@@ -27,6 +27,7 @@ server/
   store.ts                        # Supabase/demo-first catalogue and persistence services
   supabase.ts                     # Server-only external Postgres REST boundary
 shared/products.ts                # Shared source-aligned catalogue data
+docs/                             # Project documentation, indexed in docs/README.md
 supabase/schema.sql               # Portable external Postgres/Supabase tables and product seeds
 figma-reference/                  # Original desktop/mobile frame screenshots for comparison
 ```

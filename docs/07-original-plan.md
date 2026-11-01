@@ -21,7 +21,7 @@ The Figma page remains the design source of truth. Its original text and spellin
 - **Wordmark & Logo:** a text-first Bean Scene wordmark set in the supplied Clicker Script character, matching the Figma frame; do not substitute an unrelated icon or a default sans-serif logo.
 - **Signature Brand Color:** toasted-bean gold `#F9C06A`, used for calls to action and focused visual accents.
 
-See [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md) for the extracted token inventory and component rules.
+See [the design guide](./02-design-guide.md) for the extracted token inventory and component rules.
 
 ## Implementation approach
 
@@ -55,10 +55,11 @@ server/
   supabase.ts                    # External Supabase REST boundary
 shared/products.ts               # Shared source-aligned catalogue data
 supabase/schema.sql              # Portable external Postgres schema and product seeds
-DESIGN_SYSTEM.md                 # Visual system extracted from both frames
-ARCHITECTURE.md                  # Runtime, pages, data flow and SEO details
-SUPABASE.md                      # Environment, schema and security guidance
-TODO.md                          # Outcome acceptance and delivery status
+docs/                            # Project documentation (from docs/README.md):
+                                 #   02-design-guide.md          — visual system extracted from both frames
+                                 #   03-architecture.md          — runtime, pages, data flow and SEO details
+                                 #   04-supabase-database.md     — environment, schema and security guidance
+                                 #   06-roadmap.md               — outcome acceptance and delivery status
 ```
 
 ## Dependencies and constraints
