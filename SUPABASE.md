@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Supabase Postgres is the optional durable store for Bean Scene product rows, contact messages, newsletter subscribers and portfolio-only demo orders. The storefront remains useful without a Supabase project: it loads a local coffee catalogue and clearly says when form submissions are running in demo mode.
+Supabase Postgres is the optional durable store for Bean Scene product rows, contact messages, newsletter subscribers and portfolio-only demo orders. Without credentials, the storefront remains useful in an intentionally labelled local demo mode. With configured credentials, confirmed writes are reported as saved only when Supabase returns the inserted row; failed writes return a retryable service error instead of a false success.
 
 ## Environment variables
 
@@ -14,7 +14,7 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 VITE_PUBLIC_SITE_URL=https://your-real-production-domain.example
 ```
 
-`SUPABASE_SERVICE_ROLE_KEY` is for Express only. Do **not** prefix it with `VITE_`, do not add it to client code and do not commit it. `VITE_PUBLIC_SITE_URL` is a separate public origin setting; use the real HTTPS site domain, never the ephemeral Preview URL. It enables production canonical URLs, share images, and a valid absolute sitemap.
+`SUPABASE_SERVICE_ROLE_KEY` is for Express only. Do **not** prefix it with `VITE_`, add it to client code, or commit it. `VITE_PUBLIC_SITE_URL` is a separate public origin setting; use the real HTTPS site domain, never the ephemeral Preview URL. It enables production canonical URLs, share images and an absolute sitemap.
 
 ## Apply the schema
 
@@ -38,13 +38,17 @@ The HTTP API calls Supabase PostgREST with the server-only service key. Frontend
 
 RLS is enabled on all four tables. Service-role access is restricted to the server. Product IDs, slugs, quantities and prices are revalidated/recomputed at the API boundary; client-supplied totals are not accepted as authoritative. Before a live shop is added, review rate limiting, retention, privacy notices and policies appropriate to the operator’s actual region.
 
-## Fallback behavior
+## Status and fallback behavior
 
-| Capability | With Supabase | Without Supabase / on read failure |
-| --- | --- | --- |
-| Catalogue | Express loads product rows | The source-aligned four-product demo set is returned (`demo: true`) |
-| Newsletter | Stores validated email | Returns an explicit demo-mode receipt; no remote row is claimed |
-| Contact | Stores validated name/email/subject/message | Returns an explicit demo receipt; no remote row is claimed |
-| Checkout | Stores a demo-order record only | Confirms a demo order in browser state; no payment is requested or taken |
+| Capability | Result |
+| --- | --- |
+| No Supabase credentials | Return the source-aligned four-product demo catalogue. Newsletter/contact/order actions are marked `demo: true`, `persistence: "preview-only"`; no remote write or email delivery is claimed. |
+| Configured catalogue with rows | Return the Supabase product rows with `source: "supabase"`. |
+| Configured but empty catalogue | Show the sample menu with `source: "empty-fallback"` and an informative “catalogue is empty” message plus retry. |
+| Configured catalogue read failure | Keep the sample menu usable but mark `source: "unavailable-fallback"`, display a retryable error, and let the user refresh the menu. |
+| Configured newsletter/contact/order write | A successful Supabase insert must return a saved row before the UI says `persistence: "saved"`. |
+| Configured write failure | Return HTTP 503 with `code: "store_unavailable"`; keep form/cart details and display retry guidance instead of demo success. |
+| Email delivery | No outbound email provider is configured. Newsletter/contact/order status explicitly says no email was sent or that confirmation delivery is not configured. |
+| Checkout | Never collects payment; only a portfolio demo-order record may be saved. Confirmation requires a recent successful response in the active browser session. |
 
-No flow processes real payments, handles payment instruments, or claims email was sent. This is a functional portfolio demonstration, not an enabled live commercial store. Supabase credentials were not supplied during the build, so Preview uses the documented local demo mode.
+No flow processes real payments or handles payment instruments. This is a functional portfolio demonstration, not an enabled live commercial store. Supabase credentials were not supplied during the build, so Preview uses the documented local demo mode.

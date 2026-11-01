@@ -1,5 +1,5 @@
 import "dotenv/config";
-import express from "express";
+import express, { type Response } from "express";
 import { createServer } from "http";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
@@ -7,10 +7,23 @@ import { publicPlatformScript } from "./publicConfig";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
-import { findProduct, listProducts, saveContact, saveDemoOrder, subscribe } from "../store";
+import { findProduct, listProducts, saveContact, saveDemoOrder, StorePersistenceError, subscribe } from "../store";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const text = (value: unknown) => (typeof value === "string" ? value.trim() : "");
+const actionOutcome = (result: { demo: boolean }) => ({
+  ...result,
+  persistence: result.demo ? "preview-only" as const : "saved" as const,
+  emailDelivery: "not-configured" as const,
+});
+const respondWithStoreError = (res: Response, error: unknown, message: string) => {
+  const configuredStoreFailure = error instanceof StorePersistenceError;
+  if (!configuredStoreFailure) console.error("[Bean Scene] Unexpected store route failure", error);
+  return res.status(configuredStoreFailure ? 503 : 500).json({
+    code: configuredStoreFailure ? "store_unavailable" : "store_error",
+    message,
+  });
+};
 
 async function startServer() {
   const app = express();
@@ -33,7 +46,11 @@ async function startServer() {
   app.post("/api/newsletter", async (req, res) => {
     const email = text(req.body?.email).toLowerCase();
     if (!emailPattern.test(email)) return res.status(422).json({ message: "Please enter a valid email address." });
-    return res.status(201).json(await subscribe(email));
+    try {
+      return res.status(201).json(actionOutcome(await subscribe(email)));
+    } catch (error) {
+      return respondWithStoreError(res, error, "We could not confirm that your subscription was saved. Please try again in a moment.");
+    }
   });
 
   app.post("/api/contact", async (req, res) => {
@@ -41,7 +58,11 @@ async function startServer() {
     if (!input.name || !emailPattern.test(input.email) || !input.subject || input.message.length < 10) {
       return res.status(422).json({ message: "Please complete each field and include a message of at least 10 characters." });
     }
-    return res.status(201).json(await saveContact(input));
+    try {
+      return res.status(201).json(actionOutcome(await saveContact(input)));
+    } catch (error) {
+      return respondWithStoreError(res, error, "We could not confirm that your message was saved. Please try again in a moment.");
+    }
   });
 
   app.post("/api/orders", async (req, res) => {
@@ -65,8 +86,12 @@ async function startServer() {
     }
     const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const orderNumber = `BS-${String(Date.now()).slice(-6)}`;
-    const result = await saveDemoOrder({ orderNumber, customerName, email, deliveryNote, items, subtotal });
-    return res.status(201).json({ ...result, orderNumber });
+    try {
+      const result = await saveDemoOrder({ orderNumber, customerName, email, deliveryNote, items, subtotal });
+      return res.status(201).json({ ...actionOutcome(result), orderNumber });
+    } catch (error) {
+      return respondWithStoreError(res, error, "We could not confirm the demo order save. Your cart has been kept; please check for a confirmation before retrying.");
+    }
   });
 
   registerOAuthRoutes(app);

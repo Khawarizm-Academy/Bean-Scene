@@ -1,4 +1,4 @@
-import { BrandButton } from "@/components/BrandPrimitives";
+import { ActionStatus, BrandButton } from "@/components/BrandPrimitives";
 import { useCart } from "@/contexts/CartContext";
 import { formatCurrency } from "@/data/products";
 import { Menu, Minus, Plus, ShoppingBag, X } from "lucide-react";
@@ -49,7 +49,7 @@ export function SiteHeader() {
 }
 
 export function CartDrawer() {
-  const { items, subtotal, updateQuantity, removeItem, isCartOpen, setCartOpen } = useCart();
+  const { items, subtotal, updateQuantity, removeItem, isCartOpen, setCartOpen, cartPersistence, cartPersistenceMessage, retryCartPersistence } = useCart();
   const [, setLocation] = useLocation();
 
   useEffect(() => {
@@ -77,7 +77,7 @@ export function CartDrawer() {
             <button className="cart-line__remove" onClick={() => removeItem(item.id)}>Remove</button>
           </div>)}
         </div> : <div className="cart-empty"><ShoppingBag size={32} /><p>Your cart is waiting for a beautiful cup of coffee.</p><BrandButton onClick={() => { setCartOpen(false); setLocation("/shop"); }}>Browse coffee</BrandButton></div>}
-        {items.length ? <footer><div><span>Subtotal</span><strong>{formatCurrency(subtotal)}</strong></div><BrandButton onClick={() => { setCartOpen(false); setLocation("/checkout"); }}>Demo checkout</BrandButton><Link href="/cart" onClick={() => setCartOpen(false)}>View full cart</Link></footer> : null}
+        {items.length ? <footer><div><span>Subtotal</span><strong>{formatCurrency(subtotal)}</strong></div>{cartPersistence === "session-only" ? <><ActionStatus tone="error" title="Cart is session-only" message={cartPersistenceMessage} /><BrandButton className="cart-drawer__retry" onClick={retryCartPersistence}>Retry saving cart</BrandButton></> : null}<BrandButton onClick={() => { setCartOpen(false); setLocation("/checkout"); }}>Demo checkout</BrandButton><Link href="/cart" onClick={() => setCartOpen(false)}>View full cart</Link></footer> : null}
       </aside>
     </div>
   );

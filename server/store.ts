@@ -14,6 +14,24 @@ export type StoreProduct = {
   notes: readonly string[];
 };
 
+export type ProductSource = "demo" | "supabase" | "empty-fallback" | "unavailable-fallback";
+export type ProductCatalogue = {
+  products: readonly StoreProduct[];
+  demo: boolean;
+  source: ProductSource;
+  message?: string;
+};
+
+export class StorePersistenceError extends Error {
+  readonly operation: string;
+
+  constructor(operation: string) {
+    super(`Bean Scene could not confirm the ${operation} write.`);
+    this.name = "StorePersistenceError";
+    this.operation = operation;
+  }
+}
+
 type SupabaseProduct = {
   id: string;
   slug: string;
@@ -27,11 +45,19 @@ type SupabaseProduct = {
 
 const mapDemoProducts = (): StoreProduct[] => products.map((product) => ({ ...product }));
 
-export async function listProducts(): Promise<{ products: readonly StoreProduct[]; demo: boolean }> {
-  if (!getSupabaseConfig()) return { products: mapDemoProducts(), demo: true };
+export async function listProducts(): Promise<ProductCatalogue> {
+  if (!getSupabaseConfig()) return { products: mapDemoProducts(), demo: true, source: "demo" };
+
   try {
     const result = await supabaseRequest<SupabaseProduct[]>("products", { query: "select=*&order=name.asc" });
-    if (!result?.length) return { products: mapDemoProducts(), demo: true };
+    if (!result?.length) {
+      return {
+        products: mapDemoProducts(),
+        demo: true,
+        source: "empty-fallback",
+        message: "The configured Supabase catalogue is empty. Showing the sample coffee menu until products are added.",
+      };
+    }
     const normalized = result.map((row): StoreProduct => {
       const local = products.find((product) => product.slug === row.slug);
       return {
@@ -47,41 +73,44 @@ export async function listProducts(): Promise<{ products: readonly StoreProduct[
         notes: local?.notes ?? [],
       };
     });
-    return { products: normalized, demo: false };
+    return { products: normalized, demo: false, source: "supabase" };
   } catch (error) {
-    console.warn("[Bean Scene] Using demo products after Supabase read failure", error);
-    return { products, demo: true };
+    console.warn("[Bean Scene] Supabase menu unavailable; returning local fallback", error);
+    return {
+      products: mapDemoProducts(),
+      demo: true,
+      source: "unavailable-fallback",
+      message: "The Supabase menu could not be refreshed. Sample coffees are shown for now; try again when the connection is restored.",
+    };
   }
 }
 
 export async function findProduct(slug: string) {
   const inventory = await listProducts();
-  return { product: inventory.products.find((item) => item.slug === slug) ?? null, demo: inventory.demo };
+  return { ...inventory, product: inventory.products.find((item) => item.slug === slug) ?? null };
 }
 
-export async function subscribe(email: string) {
+async function persist(operation: string, table: string, body: unknown): Promise<{ demo: boolean }> {
   if (!getSupabaseConfig()) return { demo: true };
   try {
-    await supabaseRequest("newsletter_subscribers", { method: "POST", body: { email } });
+    const inserted = await supabaseRequest<unknown[]>(table, { method: "POST", body });
+    if (!Array.isArray(inserted) || inserted.length === 0) throw new Error("Supabase did not return a saved row.");
     return { demo: false };
   } catch (error) {
-    console.warn("[Bean Scene] Newsletter persistence unavailable", error);
-    return { demo: true };
+    console.error(`[Bean Scene] ${operation} was not persisted`, error);
+    throw new StorePersistenceError(operation);
   }
 }
 
-export async function saveContact(input: { name: string; email: string; subject: string; message: string }) {
-  if (!getSupabaseConfig()) return { demo: true };
-  try {
-    await supabaseRequest("contact_messages", { method: "POST", body: input });
-    return { demo: false };
-  } catch (error) {
-    console.warn("[Bean Scene] Contact persistence unavailable", error);
-    return { demo: true };
-  }
+export function subscribe(email: string) {
+  return persist("newsletter subscription", "newsletter_subscribers", { email });
 }
 
-export async function saveDemoOrder(input: {
+export function saveContact(input: { name: string; email: string; subject: string; message: string }) {
+  return persist("contact message", "contact_messages", input);
+}
+
+export function saveDemoOrder(input: {
   orderNumber: string;
   customerName: string;
   email: string;
@@ -89,22 +118,12 @@ export async function saveDemoOrder(input: {
   items: unknown[];
   subtotal: number;
 }) {
-  if (!getSupabaseConfig()) return { demo: true };
-  try {
-    await supabaseRequest("demo_orders", {
-      method: "POST",
-      body: {
-        order_number: input.orderNumber,
-        customer_name: input.customerName,
-        email: input.email,
-        delivery_note: input.deliveryNote ?? null,
-        items: input.items,
-        subtotal: input.subtotal,
-      },
-    });
-    return { demo: false };
-  } catch (error) {
-    console.warn("[Bean Scene] Demo order persistence unavailable", error);
-    return { demo: true };
-  }
+  return persist("demo order", "demo_orders", {
+    order_number: input.orderNumber,
+    customer_name: input.customerName,
+    email: input.email,
+    delivery_note: input.deliveryNote ?? null,
+    items: input.items,
+    subtotal: input.subtotal,
+  });
 }

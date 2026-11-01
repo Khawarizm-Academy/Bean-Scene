@@ -38,3 +38,10 @@ The website exposes its declared routes in `client/public/manus-routes.json`, em
 ## Project plan
 
 The design and implementation blueprint is recorded in [plan.md](./plan.md). The two Figma files are desktop/mobile frames of the same homepage; see the system analysis before extending its styles or adding pages.
+
+
+## Progress and result feedback
+
+Newsletter, contact, cart and checkout actions show accessible progress, success, demo/persistence and retryable error states. Confirmation distinguishes database persistence from email delivery. No email provider is configured, so the app clearly reports that confirmation email is not sent rather than displaying a false “email sent” success.
+
+Configured Supabase write outages and menu-read failures now show retryable feedback rather than demo success; empty catalogues are identified separately from missing credentials. The cart explains when browser storage is unavailable, and the order-confirmation route will not claim an order without a recent successful checkout.
